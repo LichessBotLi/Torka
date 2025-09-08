@@ -14,7 +14,7 @@ with open(input_file) as pgn, open(output_file, "w") as out:
         if game is None:
             break
         result = game.headers.get("Result")
-        if result in ["1-0", "1/2-1/2"]:
+        if result in ["0-1", "1/2-1/2"]:
             out.write(str(game) + "\n\n")
 
 print(f"Filtered games saved to {output_file}")
