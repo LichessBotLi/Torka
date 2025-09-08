@@ -20,7 +20,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        persist-credentials: true   # needed for push
+        persist-credentials: true
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -30,28 +30,9 @@ jobs:
     - name: Install python-chess
       run: pip install chess
 
-    - name: Filter White Wins and Draws
+    - name: Run b.py to filter PGN
       run: |
-        INPUT_FILE="${{ github.event.inputs.input_file }}"
-        OUTPUT_FILE="${{ github.event.inputs.output_file }}"
-
-        python3 - <<EOF
-import chess.pgn
-
-input_file = "$INPUT_FILE"
-output_file = "$OUTPUT_FILE"
-
-with open(input_file) as pgn, open(output_file, "w") as out:
-    while True:
-        game = chess.pgn.read_game(pgn)
-        if game is None:
-            break
-        result = game.headers.get("Result")
-        if result in ["1-0", "1/2-1/2"]:
-            out.write(str(game) + "\n\n")
-
-print(f"Filtered games saved to {output_file}")
-EOF
+        python -u b.py "${{ github.event.inputs.input_file }}" "${{ github.event.inputs.output_file }}"
 
     - name: Commit and Push Filtered PGN
       run: |
