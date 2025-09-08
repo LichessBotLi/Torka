@@ -1,5 +1,9 @@
 name: Filter White Wins PGN and Push
 
+# Give workflow permission to push to the repo
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +14,7 @@ on:
       output_file:
         description: 'Filtered PGN filename to save'
         required: true
-        default: 'white_draw.pgn'
+        default: 'wkoths.pgn'
 
 jobs:
   filter_white:
@@ -20,7 +24,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-        persist-credentials: true
+        persist-credentials: true  # required for pushing
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -39,5 +43,5 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add ${{ github.event.inputs.output_file }}
-        git commit -m "Filtered White wins and draws: ${{ github.event.inputs.output_file }}"
-        git push
+        git commit -m "Filtered White wins and draws: ${{ github.event.inputs.output_file }}" || echo "No changes to commit"
+        git push main
