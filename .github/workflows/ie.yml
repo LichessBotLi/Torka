@@ -1,0 +1,62 @@
+name: Filter White Wins PGN and Push
+
+on:
+  workflow_dispatch:
+    inputs:
+      input_file:
+        description: 'Input PGN filename in repo'
+        required: true
+        default: 'wkoth.pgn'
+      output_file:
+        description: 'Filtered PGN filename to save'
+        required: true
+        default: 'white_draw.pgn'
+
+jobs:
+  filter_white:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: true   # needed for push
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install python-chess
+      run: pip install chess
+
+    - name: Filter White Wins and Draws
+      run: |
+        INPUT_FILE="${{ github.event.inputs.input_file }}"
+        OUTPUT_FILE="${{ github.event.inputs.output_file }}"
+
+        python3 - <<EOF
+import chess.pgn
+
+input_file = "$INPUT_FILE"
+output_file = "$OUTPUT_FILE"
+
+with open(input_file) as pgn, open(output_file, "w") as out:
+    while True:
+        game = chess.pgn.read_game(pgn)
+        if game is None:
+            break
+        result = game.headers.get("Result")
+        if result in ["1-0", "1/2-1/2"]:
+            out.write(str(game) + "\n\n")
+
+print(f"Filtered games saved to {output_file}")
+EOF
+
+    - name: Commit and Push Filtered PGN
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add ${{ github.event.inputs.output_file }}
+        git commit -m "Filtered White wins and draws: ${{ github.event.inputs.output_file }}"
+        git push
