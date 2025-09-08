@@ -1,0 +1,41 @@
+name: Build Chess Book
+
+on:
+  workflow_dispatch:
+    inputs:
+      input_pgn:
+        description: 'PGN file name in the repository'
+        required: true
+        default: 'ur.pgn'
+      output_bin:
+        description: 'Output Polyglot book name'
+        required: true
+        default: 'ur.bin'
+
+jobs:
+  build-book:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install chess
+
+    - name: Run build_book.py
+      run: |
+        python build_book.py ${{ github.event.inputs.input_pgn }} ${{ github.event.inputs.output_bin }}
+
+    - name: Upload output book
+      uses: actions/upload-artifact@v4
+      with:
+        name: chess-book
+        path: ${{ github.event.inputs.output_bin }}
